@@ -43,8 +43,8 @@ router.put('/:id', function (req, res, next) {
 
 router.post('/', function (req, res, next) {
     try {
-        console.log("req", req);
-        res.json(req.body)
+        console.log("req", res);
+        console.log("REQ BODY", req.body);
     } catch (error) {
         res.json(error)
     }
