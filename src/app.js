@@ -28,7 +28,7 @@ app.use('/points', routerPlayerPoint)
 //     console.log('Kết nối DB thành công ' + connection.threadId);
 // });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log("Server của bạn đang chạy ở cổng ", PORT);
 })
