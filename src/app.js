@@ -4,6 +4,8 @@ import morgan from "morgan"
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import routerPlayerPoint from "./routes/player";
+import request from "request"
+import fs from "fs";
 
 const app = express();
 const swaggerJSDocs = YAML.load('./api.yaml');
