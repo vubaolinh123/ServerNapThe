@@ -45,12 +45,7 @@ router.put('/:id', function (req, res, next) {
 
 router.post('/', function (req, res, next) {
     try {
-        request("https://server-napthe.herokuapp.com/points	", function (error, response, body) {
-            if (!error) {
-                // writing the response to a file named data.html
-                fs.writeFileSync("data.html", body);
-            }
-        });
+        console.log(req.body);
     } catch (error) {
         res.json(error)
     }
