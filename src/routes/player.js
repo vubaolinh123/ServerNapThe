@@ -45,7 +45,6 @@ router.put('/:id', function (req, res, next) {
 
 router.post('/', urlencodedParser, function (req, res, next) {
     try {
-        JSON.parse("======BodyParse=======", req)
         console.log(req);
     } catch (error) {
         res.json(error)
