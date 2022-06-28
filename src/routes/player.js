@@ -30,7 +30,7 @@ router.get('/:id?', (req, res, next) => {
     }
 })
 
-router.post('/', (req, res, next) => {
+router.post('/napthe', (req, res, next) => {
     try {
         const { username, content, menhgia, mathe, seri, loaithe } = req.body
         if (username && content && menhgia && mathe && seri && loaithe) {
