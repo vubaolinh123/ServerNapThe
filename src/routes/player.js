@@ -1,8 +1,8 @@
 import express from "express"
 const router = express.Router()
 import PlayerPoint from "../models/player"
-import request from "request"
-import fs from "fs";
+import bodyParser from "body-parser";
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 
 // Lấy dữ liệu toàn bộ người chơi nạp Point hoặc 1 người chơi
@@ -43,9 +43,9 @@ router.put('/:id', function (req, res, next) {
     });
 });
 
-router.post('/', function (req, res, next) {
+router.post('/', urlencodedParser, function (req, res, next) {
     try {
-        console.log(req.body);
+        console.log(req);
     } catch (error) {
         res.json(error)
     }

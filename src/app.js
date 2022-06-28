@@ -4,13 +4,15 @@ import morgan from "morgan"
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import routerPlayerPoint from "./routes/player";
-import request from "request"
-import fs from "fs";
+import bodyParser from "body-parser";
+
 
 const app = express();
 const swaggerJSDocs = YAML.load('./api.yaml');
 
 // middleware
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 app.use(cors());
 app.use(morgan("tiny"))
 app.use(express.json());
