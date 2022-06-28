@@ -58,17 +58,21 @@ router.post('/', (req, res, next) => {
 
 // Nơi nhận lại dữ liệu từ thẻ siêu tốc trả về sau khoảng 10 - 30s để + Point vào cho người chơi
 router.post('/', urlencodedParser, function (req, res, next) {
+    console.log(req.body);
     try {
         const { status, serial, pin, card_type, amount, receive_amount, real_amount, transaction_id, content, noidung } = JSON.parse(JSON.stringify(req.body))
         if (status && serial && pin && card_type && amount && receive_amount && real_amount && transaction_id && content && noidung) {
             console.log(JSON.parse(JSON.stringify(req.body)));
+            console.log(req.body);
         } else {
+            console.log("Thông tin gửi lên Server không hợp lệ");
             res.status(400).json({
                 errors: "Thông tin gửi lên Server không hợp lệ"
             });
         }
 
     } catch (error) {
+        console.log("Không nạp được Xu, hãy báo cho Admin xem xét");
         res.status(400).json({
             errors: "Không nạp được Xu, hãy báo cho Admin xem xét"
         });
