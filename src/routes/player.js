@@ -43,11 +43,18 @@ router.put('/:id', function (req, res, next) {
     });
 });
 
+
+// Nơi nhận lại dữ liệu từ thẻ siêu tốc trả về sau khoảng 10 - 30s để + Point vào cho người chơi
 router.post('/', urlencodedParser, function (req, res, next) {
     try {
-        console.log(req);
+        const { status, serial, card_type, amount, receive_amount, real_amount, transaction_id, content, noidung } = req.body
+        if (status && serial && card_type && amount && receive_amount && real_amount && transaction_id && content && noidung) {
+            console.log(req.body);
+        }
     } catch (error) {
-        res.json(error)
+        res.status(400).json({
+            errors: "Không nạp được Xu, hãy báo cho Admin xem xét"
+        });
     }
 });
 
