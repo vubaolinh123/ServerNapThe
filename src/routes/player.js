@@ -1,9 +1,11 @@
 import express from "express"
 const router = express.Router()
 import db from "../../Dbconnection"
+import { v4 as uuidv4 } from 'uuid';
 import PlayerPoint from "../models/player"
 import bodyParser from "body-parser";
 import { rateLimit } from "express-rate-limit";
+import axios from "axios";
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 // Chặn số lượng gửi Requested lên Server
@@ -46,34 +48,53 @@ router.get('/:id?', (req, res, next) => {
         })
     }
 })
-
-router.post('/napthe', apiLimiter, (req, res, next) => {
+// apiLimiter
+router.post('/napthe', async (req, res, next) => {
     try {
-        const { username, content, menhgia, mathe, seri, type } = req.body
+        const { username, menhgia, mathe, seri, type } = req.body
         // Nếu người dùng bấm form submit lên mà có các giá trị trên thì sẽ chạy vào đây
-        if (username && content && menhgia && mathe && seri && type) {
+        if (username && menhgia && mathe && seri && type) {
             const info = req.body
-            // Lưu dữ liệu người chơi nạp thẻ vào DB riêng để sau này xác minh dựa trên dữ liệu content
-            PlayerPoint.AddPlayerNapThe(info, (err, data) => {
-                if (err) {
+            info.APIkey = "A5C3AA19DDD4D255D6CA2A4E5EC0FD9A"
+            info.content = uuidv4()
+            // Gọi API đến thẻ siêu tốc để gửi thẻ cho bên đó check
+            try {
+                const { data } = await axios.post(`https://thesieutoc.net/chargingws/v2`, info)
+                if (data.status === "00") {
+                    // Do trạng thái thẻ là thành công nên sẽ lưu dữ liệu người chơi nạp thẻ vào DB riêng
+                    //  để sau này xác minh dựa trên dữ liệu content
+                    PlayerPoint.AddPlayerNapThe(info, (err, dataQuery) => {
+                        if (err) {
+                            res.status(400).json({
+                                msg: "Không thêm được thông tin (SERVER, QUERY)",
+                                err
+                            })
+                        }
+                        else {
+                            res.json(data);
+                        }
+                    })
+                } else {
                     res.status(400).json({
-                        msg: "Không thêm được thông tin (SERVER, QUERY)",
-                        err
+                        msg: data.msg,
+                        title: data.title
                     })
                 }
-                else {
-                    res.json(data);
-                }
-            })
+            } catch (error) {
+                res.status(400).json({
+                    msg: "Lỗi khi gọi đến API của thẻ siêu tốc",
+                    error
+                })
+            }
         } else {
             res.status(400).json({
                 msg: "Làm cách nào đó bạn đã nhập thiếu thông tin"
             })
         }
-
     } catch (error) {
         res.status(400).json({
-            msg: "Không nạp được thẻ"
+            msg: "Không nạp được thẻ",
+            error
         })
     }
 })
@@ -92,7 +113,7 @@ router.post('/', urlencodedParser, function (req, res, next) {
             }
             // Sau khi callback từ Server nạp thẻ trả về sẽ lấy dữ liệu người chơi trong DB riêng để đổi trạng thái và + Point
             // Nếu trạng thái thành công
-            PlayerPoint.LayThongTinNguoiNapThe(dataNapThe, (err, data) => {
+            PlayerPoint.LayThongTinNguoiNapThe(dataNapThe, async (err, data) => {
                 if (err) {
                     console.log("Không lấy được thông tin trong DB hoặc đối chiếu thông tin thất bại", err);
                     res.status(400).json({
@@ -108,10 +129,11 @@ router.post('/', urlencodedParser, function (req, res, next) {
                     console.log("dataPlayer", json(data));
                     if (status === 'thanhcong') {
                         // DB QUERY + POINT vào theo Name
-                        db.query(`UPDATE playerpoints_points
+                        await db.query(`UPDATE playerpoints_points
                         INNER JOIN playerpoints_username_cache ON playerpoints_points.uuid=playerpoints_username_cache.uuid 
                         SET playerpoints_points.points=playerpoints_points.points+(${amount * 0.001}) 
                         WHERE playerpoints_username_cache.username='${data.name}'`)
+
                         return db.query(`UPDATE 'trans_log' SET 'status' = 1 WHERE 'id'=${data.id}`)
                     } else if (status === 'saimenhgia') {
                         return db.query(`UPDATE 'trans_log' SET 'status' = 3, 'amount'=${amount} WHERE 'id'=${data.id}`)
