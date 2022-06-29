@@ -12,7 +12,7 @@ const PlayerPoint = {
     },
     // Khi người chơi bấm nút Nạp thẻ, thông tin người chơi sẽ lưu lại để sau 30s sẽ check trạng thái nạp Thành Công, Thất Bại, Sai Thẻ,...
     AddPlayerNapThe: (info, callback) => {
-        return db.query(`Insert into trans_log (name,trans_id,amount,pin,seri,type) values ('${info.username}','${info.content}',"${info.menhgia}",'${info.mathe}','${info.seri}','${info.loaithe}')`, callback)
+        return db.query(`Insert into trans_log (name,trans_id,amount,pin,seri,type) values ('${info.username}','${info.content}',"${info.menhgia}",'${info.mathe}','${info.seri}','${info.type}')`, callback)
     },
     LayThongTinNguoiNapThe: (info, callback) => {
         return db.query(`SELECT * FROM 'trans_log' WHERE status = 0 AND trans_id = '${info.content}' AND pin = '${info.pin}'  AND seri = '${info.serial}' AND type = '${info.card_type}'`, callback)
