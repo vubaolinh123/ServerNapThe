@@ -15,13 +15,31 @@ const PlayerPoint = {
         return db.query(`Insert into trans_log (name,trans_id,amount,pin,seri,type) values ('${info.username}','${info.content}',"${info.menhgia}",'${info.mathe}','${info.seri}','${info.type}')`, callback)
     },
     LayThongTinNguoiNapThe: (info, callback) => {
-        return db.query(`SELECT * FROM 'trans_log' WHERE status = 0 AND trans_id = '${info.content}' AND pin = '${info.pin}'  AND seri = '${info.serial}' AND type = '${info.card_type}'`, callback)
+        return db.query(`SELECT * FROM trans_log WHERE status = 0 AND trans_id = '${info.content}' AND pin = '${info.pin}'  AND seri = '${info.serial}' AND type = '${info.card_type}'`, callback)
     },
 
+    ThemXuChoNguoiChoiTrongGameVaDoiTrangThai: (info, callback) => {
+        return db.query(`UPDATE playerpoints_points
+                        INNER JOIN playerpoints_username_cache ON playerpoints_points.uuid=playerpoints_username_cache.uuid 
+                        SET playerpoints_points.points=playerpoints_points.points+(${info.amount * 0.001}) 
+                        WHERE playerpoints_username_cache.username='${info.name}'; 
+                        UPDATE trans_log SET status=${info.status} WHERE id=${info.id}`, callback)
+    },
 
-    ThemXuChoNguoiChoiTrongGame: (info, callback) => {
-        return db.query(`UPDATE 'trans_log' SET 'status' = ${info.status} WHERE 'id'=${info.id}`)
-    }
+    DoiStatusThanhCongVaThatBai: (info, callback) => {
+        return db.query(`UPDATE trans_log SET status=${info.status} WHERE id=${info.id}`, callback)
+    },
+
+    DoiStatusSaiMenhGia: (info, callback) => {
+        return db.query(`UPDATE trans_log SET status=${info.status}, amount=${info.amount} WHERE id=${info.id}`, callback)
+    },
+
+    GetAllLogNapThe: (callback) => {
+        return db.query("SELECT * FROM trans_log WHERE 1 ORDER BY id DESC LIMIT 0,20", callback)
+    },
+    GetLogNapTheByName: (name, callback) => {
+        return db.query(`SELECT * FROM trans_log WHERE name='${name}' ORDER BY id DESC`, callback)
+    },
 
 }
 

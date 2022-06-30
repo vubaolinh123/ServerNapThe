@@ -22,18 +22,24 @@ const apiLimiter = rateLimit({
 
 
 // Lấy dữ liệu toàn bộ người chơi nạp Point hoặc 1 người chơi
-router.get('/:id?', (req, res, next) => {
-    if (req.params.id) {
+router.get('/logpoint/:name?', (req, res, next) => {
+    if (req.params.name) {
         // Nếu truyền username lên url thì sẽ lấy 1 người chơi theo username
-        PlayerPoint.getPointPlayerById(req.params.id, (err, rows) => {
-            console.log(req.params.id);
+        PlayerPoint.getPointPlayerById(req.params.name, (err, rows) => {
             if (err) {
                 res.status(400).json({
                     errors: "Người chơi đó không tồn tại hoặc lỗi gì đó?"
                 });
             }
             else {
-                res.json(rows);
+                if (rows.length > 0) {
+                    res.json(rows);
+                } else {
+                    res.status(400).json({
+                        msg: "Không tìm thấy người chơi nào như vậy"
+                    });
+                }
+
             }
         })
     } else {
@@ -48,8 +54,43 @@ router.get('/:id?', (req, res, next) => {
         })
     }
 })
-// apiLimiter
-router.post('/napthe', async (req, res, next) => {
+
+
+router.get('/logcoin/:name?', (req, res) => {
+    console.log(req.params.name);
+    if (req.params.name) {
+        // Nếu truyền username lên url thì sẽ lấy 1 người chơi theo username
+        PlayerPoint.GetLogNapTheByName(req.params.name, (err, rows) => {
+            if (err) {
+                res.status(400).json({
+                    errors: "Người chơi đó không tồn tại hoặc lỗi gì đó?"
+                });
+            }
+            else {
+                if (rows.length > 0) {
+                    res.json(rows);
+                } else {
+                    res.status(400).json({
+                        msg: "Không tìm thấy log nào có người chơi như vậy"
+                    });
+                }
+            }
+        })
+    } else {
+        // nếu không truyền thì lấy hết dữ liệu
+        PlayerPoint.GetAllLogNapThe((err, rows) => {
+            if (err) {
+                res.json(err);
+            } else {
+                res.json(rows);
+            }
+        })
+    }
+
+})
+
+
+router.post('/napthe', apiLimiter, async (req, res, next) => {
     try {
         const { username, menhgia, mathe, seri, type } = req.body
         // Nếu người dùng bấm form submit lên mà có các giá trị trên thì sẽ chạy vào đây
@@ -113,7 +154,7 @@ router.post('/', urlencodedParser, function (req, res, next) {
             }
             // Sau khi callback từ Server nạp thẻ trả về sẽ lấy dữ liệu người chơi trong DB riêng để đổi trạng thái và + Point
             // Nếu trạng thái thành công
-            PlayerPoint.LayThongTinNguoiNapThe(dataNapThe, async (err, data) => {
+            PlayerPoint.LayThongTinNguoiNapThe(dataNapThe, async (err, dataPlayer) => {
                 if (err) {
                     console.log("Không lấy được thông tin trong DB hoặc đối chiếu thông tin thất bại", err);
                     res.status(400).json({
@@ -126,20 +167,77 @@ router.post('/', urlencodedParser, function (req, res, next) {
                     // 1 Thành công và + Xu vào DB
                     // 3 Sai mệnh giá, không + Xu nhưng vẫn khai báo lại đã nạp bao nhiêu tiền
                     // 2 Thẻ nạp thất bại (sai mã thẻ hoặc gì đó)
-                    console.log("dataPlayer", json(data));
-                    if (status === 'thanhcong') {
-                        // DB QUERY + POINT vào theo Name
-                        await db.query(`UPDATE playerpoints_points
-                        INNER JOIN playerpoints_username_cache ON playerpoints_points.uuid=playerpoints_username_cache.uuid 
-                        SET playerpoints_points.points=playerpoints_points.points+(${amount * 0.001}) 
-                        WHERE playerpoints_username_cache.username='${data.name}'`)
+                    let dataPlayerValidate = JSON.parse(JSON.stringify(dataPlayer))
 
-                        return db.query(`UPDATE 'trans_log' SET 'status' = 1 WHERE 'id'=${data.id}`)
-                    } else if (status === 'saimenhgia') {
-                        return db.query(`UPDATE 'trans_log' SET 'status' = 3, 'amount'=${amount} WHERE 'id'=${data.id}`)
+                    // Trạng Thái Thành Công Sẽ Thêm Xu Vào Cho Người Chơi 
+                    // Đồng thời đổi trạng thái nạp thẻ trên web sang thành công
+                    if (dataPlayerValidate.length > 0) {
+                        if (status === 'thanhcong') {
+                            const infoPlayer = {
+                                amount,
+                                name: dataPlayerValidate[0].name,
+                                id: dataPlayerValidate[0].id,
+                                status: 1
+                            }
+                            PlayerPoint.ThemXuChoNguoiChoiTrongGameVaDoiTrangThai(infoPlayer, (err, results, fields) => {
+                                if (err) {
+                                    console.log("Không thêm được xu cho người chơi hoặc không đổi được trạng thái sang thành công", err);
+                                    res.status(400).json({
+                                        err,
+                                        msg: "Không thêm được xu cho người chơi hoặc không đổi được trạng thái sang thành công"
+                                    });
+                                } else {
+                                    res.status(200).json({
+                                        msg: "Đổi trạng thái nạp thẻ thành công và đã thêm xu cho người chơi",
+                                    });
+                                }
+                            })
+
+                            // Khi thẻ sai mệnh giá đổi trạng thái và gắn lại số tiền người chơi đã nạp vào DB
+                        } else if (status === 'saimenhgia') {
+                            const infoStatus = {
+                                id: dataPlayerValidate[0].id,
+                                amount: amount,
+                                status: 3
+                            }
+                            PlayerPoint.DoiStatusSaiMenhGia(infoStatus, (err, data) => {
+                                if (err) {
+                                    console.log("Không đổi được trạng thái sang sai mệnh giá", err);
+                                    res.status(400).json({
+                                        err,
+                                        msg: "Không đổi được trạng thái sang sai mệnh giá"
+                                    });
+                                } else {
+                                    res.status(200).json({
+                                        msg: "Đã đổi trạng thái sang Sai mệnh giá thành công"
+                                    });
+                                }
+                            })
+                        } else { // Khi trạng thái là thất bại thì chỉ chuyển trạng thái trong DB
+                            const infoStatus = {
+                                id: dataPlayerValidate[0].id,
+                                status: 2
+                            }
+                            PlayerPoint.DoiStatusThanhCongVaThatBai(infoStatus, (err, data) => {
+                                if (err) {
+                                    console.log("Không đổi được trạng thái sang thành công", err);
+                                    res.status(400).json({
+                                        err,
+                                        msg: "Không đổi được trạng thái thành thất bại"
+                                    });
+                                } else {
+                                    res.status(200).json({
+                                        msg: "Đã đổi trạng thái thành thất bại thành công"
+                                    });
+                                }
+                            })
+                        }
                     } else {
-                        return db.query(`UPDATE 'trans_log' SET 'status' = 2 WHERE 'id'=${data.id}`)
+                        res.status(400).json({
+                            msg: "Không tìm được thông tin người chơi đã nạp thẻ"
+                        });
                     }
+
                 }
             })
         } else {
