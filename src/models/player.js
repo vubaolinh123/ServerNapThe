@@ -34,11 +34,19 @@ const PlayerPoint = {
         return db.query(`UPDATE trans_log SET status=${info.status}, amount=${info.amount} WHERE id=${info.id}`, callback)
     },
 
-    GetAllLogNapThe: (callback) => {
+    GetAllNapThe: (callback) => {
+        return db.query("SELECT * FROM trans_log ORDER BY id DESC", callback)
+    },
+
+    GetLogNapTheTop20: (callback) => {
         return db.query("SELECT * FROM trans_log WHERE 1 ORDER BY id DESC LIMIT 0,20", callback)
     },
     GetLogNapTheByName: (name, callback) => {
         return db.query(`SELECT * FROM trans_log WHERE name='${name}' ORDER BY id DESC`, callback)
+    },
+    GetTop10NapThe: (callback) => {
+        return db.query(`SELECT name, COUNT(*) AS soLanNap, SUM(amount) AS TongTienNap 
+        FROM trans_log GROUP BY name HAVING COUNT(*)>0 ORDER BY TongTienNap DESC LIMIT 10`, callback)
     },
 
 }

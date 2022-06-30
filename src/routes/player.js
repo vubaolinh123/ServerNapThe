@@ -10,7 +10,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 // Chặn số lượng gửi Requested lên Server
 const apiLimiter = rateLimit({
-    windowMs: 80 * 1000, // 80s được gửi 2 req
+    windowMs: 30 * 1000, // 80s được gửi 2 req
     max: 2,
     handler: function (req, res) {
         res.status(429).send({
@@ -57,7 +57,6 @@ router.get('/logpoint/:name?', (req, res, next) => {
 
 
 router.get('/logcoin/:name?', (req, res) => {
-    console.log(req.params.name);
     if (req.params.name) {
         // Nếu truyền username lên url thì sẽ lấy 1 người chơi theo username
         PlayerPoint.GetLogNapTheByName(req.params.name, (err, rows) => {
@@ -78,15 +77,42 @@ router.get('/logcoin/:name?', (req, res) => {
         })
     } else {
         // nếu không truyền thì lấy hết dữ liệu
-        PlayerPoint.GetAllLogNapThe((err, rows) => {
+        PlayerPoint.GetLogNapTheTop20((err, rows) => {
             if (err) {
-                res.json(err);
+                res.status(400).json({
+                    msg: "Có thể bạn chưa bật Server để có thể lấy được dữ liệu"
+                });
             } else {
                 res.json(rows);
             }
         })
     }
 
+})
+
+router.get('/alllogcoin', (req, res) => {
+    PlayerPoint.GetAllNapThe((err, data) => {
+        if (err) {
+            res.status(400).json({
+                msg: "Có thể bạn chưa bật Server để có thể lấy được dữ liệu"
+            });
+        } else {
+            res.json(data);
+        }
+    })
+})
+
+
+router.get('/top10', (req, res) => {
+    PlayerPoint.GetTop10NapThe((err, data) => {
+        if (err) {
+            res.status(400).json({
+                msg: "Có thể bạn chưa bật Server để có thể lấy được dữ liệu"
+            });
+        } else {
+            res.json(data);
+        }
+    })
 })
 
 
