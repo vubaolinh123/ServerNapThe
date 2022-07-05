@@ -5,10 +5,11 @@ import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import routerPlayerPoint from "./routes/player";
 import bodyParser from "body-parser";
-
+import dotenv from "dotenv"
 
 const app = express();
 const swaggerJSDocs = YAML.load('./api.yaml');
+dotenv.config()
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');

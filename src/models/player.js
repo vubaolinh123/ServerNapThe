@@ -46,7 +46,7 @@ const PlayerPoint = {
     },
     GetTop10NapThe: (callback) => {
         return db.query(`SELECT name, COUNT(*) AS soLanNap, SUM(amount) AS TongTienNap 
-        FROM trans_log GROUP BY name HAVING COUNT(*)>0 ORDER BY TongTienNap DESC LIMIT 10`, callback)
+        FROM trans_log GROUP BY name HAVING COUNT(*)>0 ORDER BY TongTienNap DESC LIMIT ${process.env.LIMIT_TOP_NAP_POIN || 10}`, callback)
     },
 
 }

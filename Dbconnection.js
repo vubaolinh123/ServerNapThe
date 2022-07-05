@@ -1,10 +1,10 @@
 import mysql from "mysql";
 
 var connection = mysql.createPool({
-    host: 'localhost',
-    user: 'playerpoints',
-    password: '2182002',
-    database: 'chung_playerpoint',
+    host: process.env.HOST,
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
     multipleStatements: true
 });
 
