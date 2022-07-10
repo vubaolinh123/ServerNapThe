@@ -1,4 +1,6 @@
 import mysql from "mysql";
+import dotenv from "dotenv"
+dotenv.config()
 
 var connection = mysql.createPool({
     host: process.env.HOST,
@@ -8,7 +10,10 @@ var connection = mysql.createPool({
     multipleStatements: true
 });
 
-
+connection.getConnection(function (error) {
+    if (error) throw error;
+    console.log("Kết nối thành công đến Database");
+});
 
 
 export default connection

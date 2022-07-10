@@ -7,9 +7,11 @@ import routerPlayerPoint from "./routes/player";
 import bodyParser from "body-parser";
 import dotenv from "dotenv"
 
+
 const app = express();
 const swaggerJSDocs = YAML.load('./api.yaml');
 dotenv.config()
+
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,16 +33,10 @@ app.use('/points', routerPlayerPoint)
 // connect db
 
 
-// Kết nối DB MYSQL
-// connection.connect(function (err) {
-//     if (err) {
-//         console.error('Lỗi kết nối: ' + err.stack);
-//         return;
-//     }
-//     console.log('Kết nối DB thành công ' + connection.threadId);
-// });
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log("Server của bạn đang chạy ở cổng ", PORT);
 })
+
